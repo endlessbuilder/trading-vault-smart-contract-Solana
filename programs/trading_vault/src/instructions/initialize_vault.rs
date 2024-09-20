@@ -11,8 +11,9 @@ pub struct InitializeVault<'info> {
     #[account(mut)]
     pub leader: Signer<'info>,
 
+    /// CHECK:
     #[account(mut)]
-    pub backend_wallet: Signer<'info>,
+    pub backend_wallet: AccountInfo<'info>,
 
     #[account(
         init,
