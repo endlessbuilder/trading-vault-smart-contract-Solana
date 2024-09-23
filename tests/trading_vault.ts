@@ -32,7 +32,7 @@ describe("trading_vault", () => {
   anchor.setProvider(provider);
   let wallet = provider.wallet as anchor.Wallet;
   const program = anchor.workspace.TradingVault as Program<TradingVault>;
-  const connection = new Connection("http://127.0.0.1:8899", "finalized");
+  const connection = new Connection("https://api.devnet.solana.com", "finalized");
 
   let payer = wallet.payer;
 
@@ -48,16 +48,20 @@ describe("trading_vault", () => {
 
   let usdcTokenMintPubkey: PublicKey;
   let leaderUsdcATA: PublicKey;
+  let leaderTokenAccount: PublicKey;
   let payerUsdcATA: PublicKey;
   let userUsdcATA: PublicKey;
   let backendWalletUsdcATA: PublicKey;
+  let vaultPayTokenAccount: PublicKey;
 
   // pda
   let vault: PublicKey;
+  let vaultInfo: PublicKey;
   let vaultAuthority: PublicKey;
   let mintKeypair = new Keypair();
   let mintAccount: PublicKey = mintKeypair.publicKey;
   let metadataAccount: PublicKey;
+  let userPda: PublicKey;
 
   let tokenMetadataProgram = new PublicKey(
     "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -90,7 +94,48 @@ describe("trading_vault", () => {
     console.log(
       `<<< user bal = ${await utils.getSolBalance(connection, user.publicKey)}`
     );
+
+    //  find pda accounts
+    vaultInfo = PublicKey.findProgramAddressSync(
+      [Buffer.from("vault_info"), leader.publicKey.toBuffer()],
+      program.programId
+    )[0];
+    vaultAuthority = PublicKey.findProgramAddressSync(
+      [Buffer.from("vault_authority")],
+      program.programId
+    )[0];
+    vault = PublicKey.findProgramAddressSync(
+      [Buffer.from("vault"), vaultInfo.toBuffer()],
+      program.programId
+    )[0];
+    mintAccount = PublicKey.findProgramAddressSync(
+      [Buffer.from("mint")],
+      program.programId
+    )[0];
+    metadataAccount = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata"),
+        tokenMetadataProgram.toBuffer(),
+        mintAccount.toBuffer(),
+      ],
+      tokenMetadataProgram
+    )[0];
+    userPda = PublicKey.findProgramAddressSync(
+      [Buffer.from("user"), leader.publicKey.toBuffer()],
+      program.programId
+    )[0];
+
+    console.log(`>>> -------------------- PDA -----------------------`);
+    console.log(`>>>       vaultInfo: ${vaultInfo}`);
+    console.log(`>>>  vaultAuthority: ${vaultAuthority}`);
+    console.log(`>>>           vault: ${vault}`);
+    console.log(`>>>     mintAccount: ${mintAccount}`);
+    console.log(`>>> metadataAccount: ${metadataAccount}`);
+    console.log(`>>>         userPda: ${userPda}`);
+    console.log(`>>> -------------------------------------------------`);
+
     // create mint of USDC token
+    console.log(`>>> ------ create mint ------`);
     try {
       usdcTokenMintPubkey = await createMint(
         connection,
@@ -134,16 +179,16 @@ describe("trading_vault", () => {
       ">>> leader USDC Token Account Pubkey = ",
       leaderUsdcATA.toBase58()
     );
-    // get USDC ATA of backendWallet
-    backendWalletUsdcATA = await utils.getOrCreateATA(
+    // get USDC ATA of vault
+    vaultPayTokenAccount = await utils.getOrCreateATA(
       connection,
       usdcTokenMintPubkey,
-      backendWallet.publicKey,
+      vault,
       payer
     );
     console.log(
-      ">>> backendWallet USDC Token Account Pubkey = ",
-      backendWalletUsdcATA.toBase58()
+      ">>> vault USDC Token Account Pubkey = ",
+      vault.toBase58()
     );
 
     // mint USDC token to leader and user
@@ -153,11 +198,11 @@ describe("trading_vault", () => {
       usdcTokenMintPubkey,
       leaderUsdcATA,
       payer.publicKey,
-      10 * 1_000_000
+      20 * 1_000_000
     );
     console.log(
       ">>> leader USDC balance = ",
-      (await utils.getBalance(connection, leaderUsdcATA)).toString()
+      await utils.getBalance(connection, leaderUsdcATA)
     );
     await mintTo(
       connection,
@@ -165,51 +210,29 @@ describe("trading_vault", () => {
       usdcTokenMintPubkey,
       userUsdcATA,
       payer.publicKey,
-      10 * 1_000_000
+      23 * 1_000_000
     );
     console.log(
       ">>> user USDC balance = ",
       await utils.getBalance(connection, userUsdcATA)
     );
-
-
-    //  find pda accounts
-    vault = PublicKey.findProgramAddressSync(
-      [Buffer.from("vault"), payer.publicKey.toBuffer()],
-      program.programId
-    )[0];
-    console.log(`>>> vault = ${vault}`);
-    vaultAuthority = PublicKey.findProgramAddressSync(
-      [Buffer.from("vault_authority")],
-      program.programId
-    )[0];
-    mintAccount = PublicKey.findProgramAddressSync(
-      [Buffer.from("mint")],
-      program.programId
-    )[0];
-    metadataAccount = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("metadata_account"),
-        tokenMetadataProgram.toBuffer(),
-        mintAccount.toBuffer(),
-      ],
-      program.programId
-    )[0];
   });
 
   it("vaultInitialize", async () => {
-    console.log(`>>>         leader : ${leader.publicKey.toBase58()}`)
-    console.log(`>>>  backendWallet : ${backendWallet.publicKey.toBase58()}`)
-    console.log(`>>>          vault : ${vault.toBase58()}`)
-    console.log(`>>> vaultAuthority : ${vaultAuthority.toBase58()}`)
-    console.log(`>>>    mimtAccount : ${mintAccount.toBase58()}`)
-    console.log(`>> metadataAccount : ${metadataAccount.toBase58()}`)
+    console.log(`>>>         leader : ${leader.publicKey.toBase58()}`);
+    console.log(`>>>  backendWallet : ${backendWallet.publicKey.toBase58()}`);
+    console.log(`>>>      vaultInfo : ${vaultInfo.toBase58()}`);
+    console.log(`>>> vaultAuthority : ${vaultAuthority.toBase58()}`);
+    console.log(`>>>          vault : ${vault.toBase58()}`);
+    console.log(`>>>    mimtAccount : ${mintAccount.toBase58()}`);
+    console.log(`>> metadataAccount : ${metadataAccount.toBase58()}`);
 
     let accounts = {
       leader: leader.publicKey,
       backendWallet: payer.publicKey,
-      vault: vault,
+      vaultInfo: vaultInfo,
       vaultAuthority: vaultAuthority,
+      vault: vault,
       mintAccount: mintAccount,
       metadataAccount: metadataAccount,
       systemProgram: SystemProgram.programId,
@@ -222,16 +245,73 @@ describe("trading_vault", () => {
     let txSignature = await program.methods
       .vaultInitialize()
       .accounts(accounts)
-      .signers([leader, payer])
+      .signers([leader])
       .rpc();
 
-    console.log("vaultInitialize txId = ", txSignature);
+    let latestBlockhash = await connection.getLatestBlockhash("finalized");
+    await connection.confirmTransaction({
+      signature: txSignature,
+      blockhash: latestBlockhash.blockhash,
+      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    });
+
+    console.log(">>> ✅ vaultInitialize txId = ", txSignature);
+
+    // get TOKEN ATA of leader
+    leaderTokenAccount = await utils.getOrCreateATA(
+      connection,
+      mintAccount,
+      leader.publicKey,
+      leader
+    );
+    console.log(
+      ">>> leader TOKEN Account Pubkey = ",
+      leaderTokenAccount.toBase58()
+    );
   });
 
   it("vaultInitDeposit", async () => {
+    let leaderPayTokenAccount = leaderUsdcATA;
+    console.log(`>>>               leader : ${leader.publicKey.toBase58()}`);
+    console.log(`>>>                 user : ${userPda.toBase58()}`);
+    console.log(`>>>            vaultInfo : ${vaultInfo.toBase58()}`);
+    console.log(`>>>       vaultAuthority : ${vaultAuthority.toBase58()}`);
+    console.log(`>>>                vault : ${vault.toBase58()}`);
+    console.log(`>>>          mintAccount : ${mintAccount.toBase58()}`);
+    console.log(
+      `>>> vaultPayTokenAccount : ${vaultPayTokenAccount.toBase58()}`
+    );
+    console.log(
+      `>>> leaderPayTokenAccount: ${leaderPayTokenAccount.toBase58()}`
+    );
+    console.log(`>>> leaderTokenAccount   : ${leaderTokenAccount.toBase58()}`);
+
     let accounts = {
       leader: leader.publicKey,
-      user: user.publicKey,
+      user: userPda,
+      vaultInfo: vaultInfo,
+      vaultAuthority: vaultAuthority,
+      vault: vault,
+      mintAccount: mintAccount,
+      vaultPayTokenAccount: vaultPayTokenAccount,
+      leaderPayTokenAccount: leaderPayTokenAccount,
+      leaderTokenAccount: leaderTokenAccount,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     };
+
+    let params = {
+      strategyId: "1",
+      initialDeposit: new anchor.BN(11 * 1_000_000),
+    };
+
+    let txSignature = await program.methods
+      .vaultInitDeposit(params)
+      .accounts(accounts)
+      .signers([leader])
+      .rpc();
+
+    console.log(">>> ✅ vaultInitDeposit txId = ", txSignature);
   });
 });

@@ -11,10 +11,10 @@ pub struct TerminateVault<'info> {
     pub backend_wallet: AccountInfo<'info>,
 
     #[account(
-        seeds = [b"vault", leader.key().as_ref()],
+        seeds = [b"vault_info", leader.key().as_ref()],
         bump,
     )]
-    pub vault: Account<'info, Vault>,
+    pub vault_info: Account<'info, Vault>,
     /// CHECK:
     #[account(
         seeds = [b"vault_authority"],
@@ -29,9 +29,9 @@ pub struct TerminateVault<'info> {
 
 // Terminates the vault and distributes funds to all depositors
 pub fn terminate_vault(ctx: Context<TerminateVault>) -> Result<()> {
-    let vault = &mut ctx.accounts.vault;
+    let vault_info = &mut ctx.accounts.vault_info;
 
-    vault.transfer_tokens(
+    vault_info.transfer_tokens(
         ctx.accounts.vault_pay_token_account.to_account_info(),
         ctx.accounts.backend_wallet.to_account_info(),
         ctx.accounts.vault_authority.to_account_info(),
@@ -39,10 +39,10 @@ pub fn terminate_vault(ctx: Context<TerminateVault>) -> Result<()> {
         ctx.accounts.vault_pay_token_account.get_lamports(),
     )?;
 
-    vault.tvl = 0;
-    vault.deposit_value = 0;
-    vault.bond_price = 0;
-    vault.bond_supply = 0;
+    vault_info.tvl = 0;
+    vault_info.deposit_value = 0;
+    vault_info.bond_price = 0;
+    vault_info.bond_supply = 0;
 
     Ok(())
 }
