@@ -68,7 +68,8 @@ export const getOrCreateATA = async (
     connection,
     payer,
     mint,
-    owner
+    owner,
+    true
   )
 
   return ata.address

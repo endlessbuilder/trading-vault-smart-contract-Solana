@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token};
 use anchor_spl::metadata::{create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
     CreateMetadataAccountsV3, Metadata};
@@ -17,18 +16,24 @@ pub struct InitializeVault<'info> {
 
     #[account(
         init,
-        seeds = [b"vault", leader.key().as_ref()],
+        seeds = [b"vault_info", leader.key().as_ref()],
         bump,
         payer = leader, 
         space = Vault::LEN
     )]
-    pub vault: Account<'info, Vault>,
+    pub vault_info: Account<'info, Vault>,
     /// CHECK:
     #[account(
         seeds = [b"vault_authority"],
         bump,
         )]
     pub vault_authority: AccountInfo<'info>,
+    /// CHECK:
+    #[account(
+        seeds = [b"vault", vault_info.key().as_ref()],
+        bump,
+        )]
+    pub vault: AccountInfo<'info>,
 
     // Create mint account
     // Same PDA as address of the account and mint/freeze authority
@@ -38,8 +43,8 @@ pub struct InitializeVault<'info> {
         bump,
         payer = backend_wallet,
         mint::decimals = TOKEN_DECIMALS,
-        mint::authority = mint_account.key(),
-        mint::freeze_authority = mint_account.key(),
+        mint::authority = vault_authority.key(),
+        mint::freeze_authority = vault_authority.key(),
 
     )]
     pub mint_account: Account<'info, Mint>,
@@ -56,29 +61,31 @@ pub struct InitializeVault<'info> {
     pub token_program: Program<'info, Token>,
     pub token_metadata_program: Program<'info, Metadata>,
     pub rent: Sysvar<'info, Rent>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 // Initializes the vault with the first depositor as the leader
 pub fn initialize_vault(
     ctx: Context<InitializeVault>,
 ) -> Result<()> {
-    let vault = &mut ctx.accounts.vault;
+    let vault_info = &mut ctx.accounts.vault_info;
     let leader = &mut ctx.accounts.leader;
 
-    vault.vault_authority = ctx.accounts.vault_authority.key();
-    vault.vault_authority_bump = ctx.bumps.vault_authority;
-    vault.backend_wallet = ctx.accounts.backend_wallet.key();
-    vault.strategy_id = "".to_owned();
-    vault.bond_price = 1 * 1_000_000;
-    vault.deposit_value = 0;
-    vault.tvl = 0;
-    vault.leader = *leader.to_account_info().key;
-    vault.is_trading_paused = false;
+    vault_info.bump = ctx.bumps.vault;
+    vault_info.vault_authority = ctx.accounts.vault_authority.key();
+    vault_info.vault_authority_bump = ctx.bumps.vault_authority;
+    vault_info.vault = ctx.accounts.vault.key();
+    vault_info.vault_bump = ctx.bumps.vault;
+    vault_info.backend_wallet = ctx.accounts.backend_wallet.key();
+    vault_info.strategy_id = "".to_owned();
+    vault_info.bond_price = 1 * 1_000_000;
+    vault_info.deposit_value = 0;
+    vault_info.tvl = 0;
+    vault_info.leader = *leader.to_account_info().key;
+    vault_info.is_trading_paused = false;
 
     msg!("Creating metadata account");
     // PDA signer seeds
-    let signer_seeds: &[&[&[u8]]] = &[&[b"mint", &[ctx.bumps.mint_account]]];
+    let signer_seeds: &[&[&[u8]]] = &[&[b"vault_authority", &[ctx.bumps.vault_authority]]];
 
     // Cross Program Invocation (CPI) signed by PDA
     // Invoking the create_metadata_account_v3 instruction on the token metadata program
@@ -88,8 +95,8 @@ pub fn initialize_vault(
             CreateMetadataAccountsV3 {
                 metadata: ctx.accounts.metadata_account.to_account_info(),
                 mint: ctx.accounts.mint_account.to_account_info(),
-                mint_authority: ctx.accounts.mint_account.to_account_info(), // PDA is mint authority
-                update_authority: ctx.accounts.mint_account.to_account_info(), // PDA is update authority
+                mint_authority: ctx.accounts.vault_authority.to_account_info(), // PDA is mint authority
+                update_authority: ctx.accounts.vault_authority.to_account_info(), // PDA is update authority
                 payer: ctx.accounts.backend_wallet.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
                 rent: ctx.accounts.rent.to_account_info(),
@@ -97,8 +104,8 @@ pub fn initialize_vault(
         )
         .with_signer(signer_seeds),
         DataV2 {
-            name: "token_name".to_owned(),
-            symbol: "token_symbol".to_owned(),
+            name: "traiding vault governance token".to_owned(),
+            symbol: "VAL".to_owned(),
             uri: "token_uri".to_owned(),
             seller_fee_basis_points: 0,
             creators: None,

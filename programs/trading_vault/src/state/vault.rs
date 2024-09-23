@@ -13,6 +13,10 @@ pub struct Vault {
 
     pub backend_wallet: Pubkey,
 
+    pub bump: u8,
+
+    pub vault: Pubkey,
+    pub vault_bump: u8,
     pub vault_authority: Pubkey,
     pub vault_authority_bump: u8,
 }

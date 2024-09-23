@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::Vault;
 
 #[derive(Accounts)]
-pub struct PauseTrading<'info> {
+pub struct StartTrading<'info> {
     #[account(
         mut,
         seeds = [b"vault", vault_info.leader.key().as_ref()],
@@ -14,8 +14,8 @@ pub struct PauseTrading<'info> {
 }
 
 // Pauses trading in the vault
-pub fn pause_trading(ctx: Context<PauseTrading>) -> Result<()> {
+pub fn start_trading(ctx: Context<StartTrading>) -> Result<()> {
     let vault_info = &mut ctx.accounts.vault_info;
-    vault_info.is_trading_paused = true;
+    vault_info.is_trading_paused = false;
     Ok(())
 }
