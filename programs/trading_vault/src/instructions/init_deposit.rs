@@ -38,6 +38,7 @@ pub struct InitDeposit<'info> {
     // Create mint account
     // Same PDA as address of the account and mint/freeze authority
     #[account(
+        mut,
         seeds = [b"mint"],
         bump,
     )]

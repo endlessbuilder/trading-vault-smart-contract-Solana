@@ -70,7 +70,7 @@ pub fn initialize_vault(
     let vault_info = &mut ctx.accounts.vault_info;
     let leader = &mut ctx.accounts.leader;
 
-    vault_info.bump = ctx.bumps.vault;
+    vault_info.bump = ctx.bumps.vault_info;
     vault_info.vault_authority = ctx.accounts.vault_authority.key();
     vault_info.vault_authority_bump = ctx.bumps.vault_authority;
     vault_info.vault = ctx.accounts.vault.key();

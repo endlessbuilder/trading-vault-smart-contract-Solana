@@ -5,16 +5,16 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-trading_vault = "4aeW1288H4t5oSmUhmrxmVfvuhFgYrtPSj6BGwCC4djv"
+trading_vault = "CKYN4pNRrRDQMmxDMHk9bjU4uCVAxQGj5pS4D3tCFfyB"
 
 [programs.devnet]
-trading_vault = "4aeW1288H4t5oSmUhmrxmVfvuhFgYrtPSj6BGwCC4djv"
+trading_vault = "CKYN4pNRrRDQMmxDMHk9bjU4uCVAxQGj5pS4D3tCFfyB"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "https://rpc.ankr.com/solana_devnet/3becd2d01b34b9aaada14a2aad12f01089cebabed27ea5bf1c950c413b34430f"
 wallet = "/home/wsl/.config/solana/id.json"
 
 [scripts]

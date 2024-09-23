@@ -2,14 +2,8 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { TradingVault } from "../../target/types/trading_vault";
 
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-} from "@solana/web3.js";
-import {
-  mintTo,
-} from "@solana/spl-token";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { mintTo } from "@solana/spl-token";
 // import { PROGRAM_ADDRESS } from '@metaplex-foundation/mpl-token-metadata'
 import * as utils from "../utils";
 
@@ -24,7 +18,7 @@ anchor.setProvider(provider);
 let wallet = provider.wallet as anchor.Wallet;
 export const program = anchor.workspace.TradingVault as Program<TradingVault>;
 export const connection = new Connection(
-  "https://api.devnet.solana.com",
+  "https://rpc.ankr.com/solana_devnet/3becd2d01b34b9aaada14a2aad12f01089cebabed27ea5bf1c950c413b34430f",
   "finalized"
 );
 
@@ -95,14 +89,14 @@ const getConfig = async () => {
     program.programId
   )[0];
 
-  // console.log(`>>> -------------------- PDA -----------------------`);
-  // console.log(`>>>       vaultInfo: ${vaultInfo}`);
-  // console.log(`>>>  vaultAuthority: ${vaultAuthority}`);
-  // console.log(`>>>           vault: ${vault}`);
-  // console.log(`>>>     mintAccount: ${mintAccount}`);
-  // console.log(`>>> metadataAccount: ${metadataAccount}`);
-  // console.log(`>>>         userPda: ${userPda}`);
-  // console.log(`>>> -------------------------------------------------`);
+  console.log(`>>> -------------------- PDA -----------------------`);
+  console.log(`>>>       vaultInfo: ${vaultInfo}`);
+  console.log(`>>>  vaultAuthority: ${vaultAuthority}`);
+  console.log(`>>>           vault: ${vault}`);
+  console.log(`>>>     mintAccount: ${mintAccount}`);
+  console.log(`>>> metadataAccount: ${metadataAccount}`);
+  console.log(`>>>         userPda: ${userPda}`);
+  console.log(`>>> -------------------------------------------------`);
 
   // create mint of USDC token
   // console.log(`>>> ------ create mint ------`);
@@ -168,7 +162,7 @@ const getConfig = async () => {
     vault,
     payer
   );
-  console.log(">>> vault dUSDC Token Account Pubkey = ", vault.toBase58());
+  console.log(">>> vault dUSDC Token Account Pubkey = ", vaultPayTokenAccount.toBase58());
 };
 
 const mint = async () => {
@@ -217,7 +211,7 @@ const mint = async () => {
 // mint();
 
 export const testConfig = {
-  programId: new PublicKey("4aeW1288H4t5oSmUhmrxmVfvuhFgYrtPSj6BGwCC4djv"),
+  programId: new PublicKey("CKYN4pNRrRDQMmxDMHk9bjU4uCVAxQGj5pS4D3tCFfyB"),
   tokenMetadataProgram: tokenMetadataProgram,
   payer: payer,
   leader: leader,
@@ -225,17 +219,21 @@ export const testConfig = {
   backendWallet: backendWallet,
   dUSDCMint: dUSDCMint,
   // pda
-  vault: new PublicKey("GK1kETWfzQyzeJPWVyL4wHAdRa2rjL5sDn68or6L44jh"),
-  vaultInfo: new PublicKey("CAjTj9nxFwu3J48mXvCS8B9hYfgpcNiJnCynVGCH6m2x"),
-  vaultAuthority: new PublicKey("HDrf5quhCdsrPYUk6HoFdDAg5y9eDGJr7GnVXAyorBLZ"),
-  mintAccount: new PublicKey("HUychzPnN4soF4xu6sGZsA3bvwDzq9ZQatmmqwnKaHQm"),
-  metadataAccount: new PublicKey("H9DMRHbpoY8LLV6Ky7HZXrzQyeJuK1qxR9C1XxcNa2ru"),
-  userPda: new PublicKey("B2g29Zu6vfxrqWKPUjPzqHg8qAijrp7deGMNVJXaYtxE"),
+  vault: new PublicKey("4cTdU6xmxy3HPESfEgXJyUtAxavAcUkb8D5o6X7tjqCf"),
+  vaultInfo: new PublicKey("HP7fRaCQPG2Jh5dt5iKKk7G1MqwQx9RudZcFekcNbzA"),
+  vaultAuthority: new PublicKey("AMozxAFMeufR6yvm8pTW2S17Spo9N8bZeyDYhmQ5BYVs"),
+  mintAccount: new PublicKey("F59V1uonAMtBY1op4nRxSFvAXmcj9i6QCeZsgzZZZ8HS"),
+  metadataAccount: new PublicKey(
+    "5tVm7FWN9XHWvK9M5sjForgaP93APMpzgNtkF3YWYmba"
+  ),
+  userPda: new PublicKey("BUwRKuKqGqhWNnENqKmqHTAFtkThYWufyZyM7ZGuAjQe"),
   // ATA
   payerDUSDCATA: new PublicKey("6yKGShYZziuLmKGKLfirNSn7yZeXyBJnWX4i2QwFe8Am"),
   leaderDUSDCATA: new PublicKey("BXZhMAATWPximsGYZJqfTzpNtPnaj8Hn3fWcNVaD5sRr"),
   userDUSDCATA: new PublicKey("999BUxhX7ikGcVFpYwpsWhUbne5B9ZAxnFuSGB4eMmzj"),
-  vaultPayTokenAccount: new PublicKey("GK1kETWfzQyzeJPWVyL4wHAdRa2rjL5sDn68or6L44jh"),
+  vaultPayTokenAccount: new PublicKey(
+    "Ajd86Y1frS8xxkMrw8ZosbektXzuJTYUfuxNVvi7BWo4"
+  ),
 };
 
 // console.log(">>> testConfig : \n", testConfig);
