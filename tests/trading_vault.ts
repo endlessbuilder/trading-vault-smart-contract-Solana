@@ -23,6 +23,7 @@ import * as utils from "./utils";
 
 import payerJson from "./key/payer.json";
 import leaderJson from "./key/leader.json";
+import tokenMintJson from "./key/tokenmint.json";
 import userJson from "./key/user.json";
 import backendWalletJson from "./key/backendWallet.json";
 
@@ -35,18 +36,25 @@ describe("trading_vault", () => {
   const connection = new Connection("https://api.devnet.solana.com", "finalized");
 
   let payer = wallet.payer;
+  // 3JKwidu2bmNhBcJs62TxHHaaFn98rdtNGcprRSd7pEMT
+
+  const dUSDCMint = Keypair.fromSecretKey(Uint8Array.from(tokenMintJson));
+  console.log(">>> create dUSDC publickey : ", dUSDCMint.publicKey.toBase58());
+  // A9uvQayQMd7SLJM2egRaJEeNZ9Mcma6oHg4ECRPuRSDD
 
   const leader = Keypair.fromSecretKey(Uint8Array.from(leaderJson));
-  console.log(">>> create leader publickey : ", payer.publicKey.toBase58());
+  console.log(">>> create leader publickey : ", leader.publicKey.toBase58());
+  // EAxctPe2cdvufGYZYhKFdyqA8ZAqZkQgyErbAWd41HbE
 
   const user = Keypair.fromSecretKey(Uint8Array.from(userJson));
   console.log(">>> create user publickey : ", user.publicKey.toBase58());
+  // 5Sh1GEqiHyXpgsF6QiE9u2vj8zHF7vYQN8nUECWNaQPc
 
   const backendWallet = Keypair.fromSecretKey(
     Uint8Array.from(backendWalletJson)
   );
 
-  let usdcTokenMintPubkey: PublicKey;
+  let dUSDCTokenMintPubkey: PublicKey = dUSDCMint.publicKey;
   let leaderUsdcATA: PublicKey;
   let leaderTokenAccount: PublicKey;
   let payerUsdcATA: PublicKey;
@@ -68,32 +76,32 @@ describe("trading_vault", () => {
   );
 
   it("setup!", async () => {
-    //  airdrop sol to each account
-    await utils.airDropSol(connection, payer.publicKey);
-    console.log(
-      `<<< payer bal = ${utils.toUiAmount(
-        await utils.getSolBalance(connection, payer.publicKey),
-        9
-      )}`
-    );
-    await utils.airDropSol(connection, leader.publicKey);
-    console.log(
-      `<<< leader bal = ${utils.toUiAmount(
-        await utils.getSolBalance(connection, payer.publicKey),
-        9
-      )}`
-    );
-    await utils.airDropSol(connection, backendWallet.publicKey);
-    console.log(
-      `<<< backendWallet bal = ${utils.toUiAmount(
-        await utils.getSolBalance(connection, backendWallet.publicKey),
-        9
-      )}`
-    );
-    await utils.airDropSol(connection, user.publicKey);
-    console.log(
-      `<<< user bal = ${await utils.getSolBalance(connection, user.publicKey)}`
-    );
+    // //  airdrop sol to each account
+    // await utils.airDropSol(connection, payer.publicKey);
+    // console.log(
+    //   `<<< payer bal = ${utils.toUiAmount(
+    //     await utils.getSolBalance(connection, payer.publicKey),
+    //     9
+    //   )}`
+    // );
+    // await utils.airDropSol(connection, leader.publicKey);
+    // console.log(
+    //   `<<< leader bal = ${utils.toUiAmount(
+    //     await utils.getSolBalance(connection, payer.publicKey),
+    //     9
+    //   )}`
+    // );
+    // await utils.airDropSol(connection, backendWallet.publicKey);
+    // console.log(
+    //   `<<< backendWallet bal = ${utils.toUiAmount(
+    //     await utils.getSolBalance(connection, backendWallet.publicKey),
+    //     9
+    //   )}`
+    // );
+    // await utils.airDropSol(connection, user.publicKey);
+    // console.log(
+    //   `<<< user bal = ${await utils.getSolBalance(connection, user.publicKey)}`
+    // );
 
     //  find pda accounts
     vaultInfo = PublicKey.findProgramAddressSync(
@@ -135,32 +143,33 @@ describe("trading_vault", () => {
     console.log(`>>> -------------------------------------------------`);
 
     // create mint of USDC token
-    console.log(`>>> ------ create mint ------`);
-    try {
-      usdcTokenMintPubkey = await createMint(
-        connection,
-        payer,
-        payer.publicKey,
-        null,
-        6
-      );
-      console.log(
-        ">>> ! check validity ! usdcTokenMintPubkey = ",
-        await utils.checkAccountValidity(connection, usdcTokenMintPubkey)
-      );
+    // console.log(`>>> ------ create mint ------`);
+    // try {
+    //   dUSDCTokenMintPubkey = await createMint(
+    //     connection,
+    //     payer,
+    //     payer.publicKey,
+    //     null,
+    //     6,
+    //     dUSDCMint
+    //   );
+    //   console.log(
+    //     ">>> ! check validity ! usdcTokenMintPubkey = ",
+    //     await utils.checkAccountValidity(connection, dUSDCTokenMintPubkey)
+    //   );
 
-      console.log(
-        ">>> create USDC token mint pubkey = ",
-        usdcTokenMintPubkey.toBase58()
-      );
-    } catch (e) {
-      console.log(">>> usdc createMint error # \n ", e);
-    }
+    //   console.log(
+    //     ">>> create USDC token mint pubkey = ",
+    //     dUSDCTokenMintPubkey.toBase58()
+    //   );
+    // } catch (e) {
+    //   console.log(">>> usdc createMint error # \n ", e);
+    // }
 
     // get USDC ATA of user
     userUsdcATA = await utils.getOrCreateATA(
       connection,
-      usdcTokenMintPubkey,
+      dUSDCTokenMintPubkey,
       user.publicKey,
       payer
     );
@@ -171,7 +180,7 @@ describe("trading_vault", () => {
     // get USDC ATA of leader
     leaderUsdcATA = await utils.getOrCreateATA(
       connection,
-      usdcTokenMintPubkey,
+      dUSDCTokenMintPubkey,
       leader.publicKey,
       payer
     );
@@ -182,7 +191,7 @@ describe("trading_vault", () => {
     // get USDC ATA of vault
     vaultPayTokenAccount = await utils.getOrCreateATA(
       connection,
-      usdcTokenMintPubkey,
+      dUSDCTokenMintPubkey,
       vault,
       payer
     );
@@ -195,7 +204,7 @@ describe("trading_vault", () => {
     await mintTo(
       connection,
       payer,
-      usdcTokenMintPubkey,
+      dUSDCTokenMintPubkey,
       leaderUsdcATA,
       payer.publicKey,
       20 * 1_000_000
@@ -207,7 +216,7 @@ describe("trading_vault", () => {
     await mintTo(
       connection,
       payer,
-      usdcTokenMintPubkey,
+      dUSDCTokenMintPubkey,
       userUsdcATA,
       payer.publicKey,
       23 * 1_000_000
