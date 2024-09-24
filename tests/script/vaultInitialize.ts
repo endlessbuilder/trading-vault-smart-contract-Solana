@@ -1,11 +1,13 @@
 import { SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { connection, program, testConfig } from "./setup";
+import { connection, program, getConfig } from "./setup";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
 const main = async () => {
+  console.log(`>>> ######### vaultInitialize ############`);
+  let testConfig = await getConfig()
   let payer = testConfig.payer;
   let leader = testConfig.leader;
   let backendWallet = testConfig.backendWallet;

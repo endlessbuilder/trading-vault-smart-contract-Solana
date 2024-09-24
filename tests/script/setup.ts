@@ -3,7 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { TradingVault } from "../../target/types/trading_vault";
 
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { mintTo } from "@solana/spl-token";
+import { createMint, mintTo } from "@solana/spl-token";
 // import { PROGRAM_ADDRESS } from '@metaplex-foundation/mpl-token-metadata'
 import * as utils from "../utils";
 
@@ -18,7 +18,7 @@ anchor.setProvider(provider);
 let wallet = provider.wallet as anchor.Wallet;
 export const program = anchor.workspace.TradingVault as Program<TradingVault>;
 export const connection = new Connection(
-  "https://rpc.ankr.com/solana_devnet/3becd2d01b34b9aaada14a2aad12f01089cebabed27ea5bf1c950c413b34430f",
+  "https://api.testnet.solana.com",
   "finalized"
 );
 
@@ -39,6 +39,8 @@ const user = Keypair.fromSecretKey(Uint8Array.from(userJson));
 
 const backendWallet = Keypair.fromSecretKey(Uint8Array.from(backendWalletJson));
 
+// let testConfig: any;
+
 let dUSDCTokenMintPubkey: PublicKey = dUSDCMint.publicKey;
 let leaderDUSDCATA: PublicKey;
 let leaderTokenAccount: PublicKey;
@@ -58,7 +60,8 @@ let userPda: PublicKey;
 let tokenMetadataProgram = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 );
-const getConfig = async () => {
+
+export const getConfig = async () => {
   //  find pda accounts
   vaultInfo = PublicKey.findProgramAddressSync(
     [Buffer.from("vault_info"), leader.publicKey.toBuffer()],
@@ -99,7 +102,7 @@ const getConfig = async () => {
   console.log(`>>> -------------------------------------------------`);
 
   // create mint of USDC token
-  // console.log(`>>> ------ create mint ------`);
+  console.log(`>>> ------ create mint ------`);
   // try {
   //   dUSDCTokenMintPubkey = await createMint(
   //     connection,
@@ -162,78 +165,103 @@ const getConfig = async () => {
     vault,
     payer
   );
-  console.log(">>> vault dUSDC Token Account Pubkey = ", vaultPayTokenAccount.toBase58());
+  console.log(
+    ">>> vault dUSDC Token Account Pubkey = ",
+    vaultPayTokenAccount.toBase58()
+  );
+
+  const testConfig = {
+    programId: program.programId,
+    tokenMetadataProgram: tokenMetadataProgram,
+    payer: payer,
+    leader: leader,
+    user: user,
+    backendWallet: backendWallet,
+    dUSDCMint: dUSDCMint,
+    // pda
+    vault: vault,
+    vaultInfo: vaultInfo,
+    vaultAuthority: vaultAuthority,
+    mintAccount: mintAccount,
+    metadataAccount: metadataAccount,
+    userPda: userPda,
+    // ATA
+    payerDUSDCATA: payerDUSDCATA,
+    leaderDUSDCATA: leaderDUSDCATA,
+    userDUSDCATA: userDUSDCATA,
+    vaultPayTokenAccount: vaultPayTokenAccount,
+  };
+
+  console.log(`
+    >>> testConfig : \n
+               programId : ${testConfig.programId},
+    tokenMetadataProgram : ${testConfig.tokenMetadataProgram},
+                   payer : ${testConfig.payer.publicKey.toBase58()},
+                  leader : ${testConfig.leader.publicKey.toBase58()},
+                    user : ${testConfig.user.publicKey.toBase58()},
+           backendWallet : ${testConfig.backendWallet.publicKey.toBase58()},
+               dUSDCMint : ${testConfig.dUSDCMint.publicKey.toBase58()},
+    # pda
+                   vault : ${testConfig.vault.toBase58()},
+               vaultInfo : ${testConfig.vaultInfo.toBase58()},
+          vaultAuthority : ${testConfig.vaultAuthority.toBase58()},
+             mintAccount : ${testConfig.mintAccount.toBase58()},
+         metadataAccount : ${testConfig.metadataAccount.toBase58()},
+                 userPda : ${testConfig.userPda.toBase58()},
+    # ATA
+           payerDUSDCATA : ${testConfig.payerDUSDCATA.toBase58()},
+          leaderDUSDCATA : ${testConfig.leaderDUSDCATA.toBase58()},
+            userDUSDCATA : ${testConfig.userDUSDCATA.toBase58()},
+    vaultPayTokenAccount : ${testConfig.vaultPayTokenAccount.toBase58()}
+    `);
+
+    // await mint();
+
+  return testConfig;
 };
 
 const mint = async () => {
-  // mint USDC token to payerUSDCATA
-  await mintTo(
-    connection,
-    payer,
-    dUSDCTokenMintPubkey,
-    payerDUSDCATA,
-    payer.publicKey,
-    100 * 1_000_000
-  );
-  console.log(
-    ">>> payer dUSDC balance = ",
-    await utils.getBalance(connection, payerDUSDCATA)
-  );
-  // mint USDC token to leader
-  await mintTo(
-    connection,
-    payer,
-    dUSDCTokenMintPubkey,
-    leaderDUSDCATA,
-    payer.publicKey,
-    20 * 1_000_000
-  );
-  console.log(
-    ">>> leader dUSDC balance = ",
-    await utils.getBalance(connection, leaderDUSDCATA)
-  );
-  // mint USDC token to user
-  await mintTo(
-    connection,
-    payer,
-    dUSDCTokenMintPubkey,
-    userDUSDCATA,
-    payer.publicKey,
-    23 * 1_000_000
-  );
-  console.log(
-    ">>> user dUSDC balance = ",
-    await utils.getBalance(connection, userDUSDCATA)
-  );
+  try {
+    // mint USDC token to payerUSDCATA
+    await mintTo(
+      connection,
+      payer,
+      dUSDCTokenMintPubkey,
+      payerDUSDCATA,
+      payer.publicKey,
+      100 * 1_000_000
+    );
+    console.log(
+      ">>> payer dUSDC balance = ",
+      await utils.getBalance(connection, payerDUSDCATA)
+    );
+    // mint USDC token to leader
+    await mintTo(
+      connection,
+      payer,
+      dUSDCTokenMintPubkey,
+      leaderDUSDCATA,
+      payer.publicKey,
+      20 * 1_000_000
+    );
+    console.log(
+      ">>> leader dUSDC balance = ",
+      await utils.getBalance(connection, leaderDUSDCATA)
+    );
+    // mint USDC token to user
+    await mintTo(
+      connection,
+      payer,
+      dUSDCTokenMintPubkey,
+      userDUSDCATA,
+      payer.publicKey,
+      23 * 1_000_000
+    );
+    console.log(
+      ">>> user dUSDC balance = ",
+      await utils.getBalance(connection, userDUSDCATA)
+    );
+  } catch (e) {
+    console.log(">>> mint error : ", e);
+  }
 };
-
-// getConfig();
-// mint();
-
-export const testConfig = {
-  programId: new PublicKey("CKYN4pNRrRDQMmxDMHk9bjU4uCVAxQGj5pS4D3tCFfyB"),
-  tokenMetadataProgram: tokenMetadataProgram,
-  payer: payer,
-  leader: leader,
-  user: user,
-  backendWallet: backendWallet,
-  dUSDCMint: dUSDCMint,
-  // pda
-  vault: new PublicKey("4cTdU6xmxy3HPESfEgXJyUtAxavAcUkb8D5o6X7tjqCf"),
-  vaultInfo: new PublicKey("HP7fRaCQPG2Jh5dt5iKKk7G1MqwQx9RudZcFekcNbzA"),
-  vaultAuthority: new PublicKey("AMozxAFMeufR6yvm8pTW2S17Spo9N8bZeyDYhmQ5BYVs"),
-  mintAccount: new PublicKey("F59V1uonAMtBY1op4nRxSFvAXmcj9i6QCeZsgzZZZ8HS"),
-  metadataAccount: new PublicKey(
-    "5tVm7FWN9XHWvK9M5sjForgaP93APMpzgNtkF3YWYmba"
-  ),
-  userPda: new PublicKey("BUwRKuKqGqhWNnENqKmqHTAFtkThYWufyZyM7ZGuAjQe"),
-  // ATA
-  payerDUSDCATA: new PublicKey("6yKGShYZziuLmKGKLfirNSn7yZeXyBJnWX4i2QwFe8Am"),
-  leaderDUSDCATA: new PublicKey("BXZhMAATWPximsGYZJqfTzpNtPnaj8Hn3fWcNVaD5sRr"),
-  userDUSDCATA: new PublicKey("999BUxhX7ikGcVFpYwpsWhUbne5B9ZAxnFuSGB4eMmzj"),
-  vaultPayTokenAccount: new PublicKey(
-    "Ajd86Y1frS8xxkMrw8ZosbektXzuJTYUfuxNVvi7BWo4"
-  ),
-};
-
-// console.log(">>> testConfig : \n", testConfig);
