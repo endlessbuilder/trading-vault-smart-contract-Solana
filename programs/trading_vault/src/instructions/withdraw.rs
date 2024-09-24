@@ -89,8 +89,8 @@ pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
     if ctx.accounts.depositor.key() == vault_info.leader {
         //  transfer performance fee
         msg!(">>> transfer performance fee to leader");
-        let performance_fee = (vault_info.tvl - vault_info.deposit_value) / 10;
-        if performance_fee > 0 {
+        if (vault_info.tvl - vault_info.deposit_value) > 0 {
+            let performance_fee = (vault_info.tvl - vault_info.deposit_value) / 10;
             vault_info.transfer_tokens(
                 ctx.accounts.vault_pay_token_account.to_account_info(),
                 ctx.accounts.depositor_pay_token_account.to_account_info(),
@@ -116,24 +116,25 @@ pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
     // burn user's withdrawal bond amount
     msg!(">>> burn user's withdrawal bond amount");
     // PDA signer seeds
-    let signer_seeds: &[&[&[u8]]] = &[&[b"vault_authority", &[vault_info.vault_authority_bump]]];
+    // let signer_seeds: &[&[&[u8]]] = &[&[b"vault_authority", &[vault_info.vault_authority_bump]]];
 
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info().clone(),
-        Burn {
-            mint: ctx.accounts.mint_account.to_account_info(),
-            from: ctx.accounts.depositor_token_account.to_account_info(),
-            authority: ctx.accounts.vault_authority.to_account_info(),
-        },
-        signer_seeds,
-    );
+    let cpi_accounts = Burn {
+        mint: ctx.accounts.mint_account.to_account_info(),
+        from: ctx.accounts.depositor_token_account.to_account_info(),
+        authority: ctx.accounts.depositor.to_account_info(),
+    };
+    let cpi_program = ctx.accounts.token_program.to_account_info();
+    // Create the CpiContext we need for the request
+    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
     burn(cpi_ctx, bond_value)?;
 
     // recalculate bond price
     let profit = vault_info.tvl - vault_info.deposit_value;
-    vault_info.bond_price = (vault_info.deposit_value + profit * 80 / 100) / vault_info.bond_supply;
+    vault_info.bond_price =
+        (vault_info.deposit_value + profit * 80 / 100) / vault_info.bond_supply * 1_000_000;
 
-    msg!(">>> here : vault_info: {:?}", vault_info);
-    msg!(">>> here : user: {:?}", user);
+    msg!(">>> here : vault_info : {}", vault_info.key().to_string());
+    msg!(">>> here : user : {}", user.key().to_string());
     Ok(())
 }

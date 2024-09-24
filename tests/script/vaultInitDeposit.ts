@@ -75,6 +75,9 @@ const main = async () => {
     });
 
     console.log(">>> ✅ vaultInitDeposit txId = ", txSignature);
+
+    let fetchedData = await program.account.vault.fetch(vaultInfo);
+    console.log(">>> vaultInfo ", JSON.stringify(fetchedData));
   } catch (e) {
     console.log(">>> vaultInitDeposit error # \n ", e);
   }

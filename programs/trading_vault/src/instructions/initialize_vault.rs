@@ -24,12 +24,14 @@ pub struct InitializeVault<'info> {
     pub vault_info: Account<'info, Vault>,
     /// CHECK:
     #[account(
+        mut,
         seeds = [b"vault_authority"],
         bump,
         )]
     pub vault_authority: AccountInfo<'info>,
     /// CHECK:
     #[account(
+        mut,
         seeds = [b"vault", vault_info.key().as_ref()],
         bump,
         )]
@@ -81,7 +83,7 @@ pub fn initialize_vault(
     vault_info.bond_price = 1 * 1_000_000;
     vault_info.deposit_value = 0;
     vault_info.tvl = 0;
-    vault_info.leader = *leader.to_account_info().key;
+    vault_info.leader = leader.key();
     vault_info.is_trading_paused = false;
 
     msg!("Creating metadata account");

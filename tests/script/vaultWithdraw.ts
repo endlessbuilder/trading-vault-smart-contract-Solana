@@ -13,10 +13,10 @@ const main = async () => {
   try {
     let payer = testConfig.payer;
 
+    let depositor = testConfig.user;
     let vaultInfo = testConfig.vaultInfo;
     let vaultAuthority = testConfig.vaultAuthority;
     let vault = testConfig.vault;
-    let depositor = testConfig.user;
     let user = PublicKey.findProgramAddressSync(
       [Buffer.from("user"), depositor.publicKey.toBuffer()],
       program.programId
@@ -58,7 +58,6 @@ const main = async () => {
       vaultPayTokenAccount: vaultPayTokenAccount,
       depositorTokenAccount: depositorTokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     };
 

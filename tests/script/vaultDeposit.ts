@@ -60,7 +60,7 @@ const main = async () => {
     };
 
     let params = {
-      amount: new anchor.BN(11 * 1_000_000),
+      amount: new anchor.BN(3 * 1_000_000),
     };
 
     let txSignature = await program.methods
@@ -77,6 +77,9 @@ const main = async () => {
     });
 
     console.log(">>> ✅ vaultDeposit txId = ", txSignature);
+
+    let fetchedData = await program.account.vault.fetch(vaultInfo);
+    console.log(">>> vaultInfo ", JSON.stringify(fetchedData));
   } catch (e) {
     console.log(">>> vaultDeposit error # \n ", e);
   }

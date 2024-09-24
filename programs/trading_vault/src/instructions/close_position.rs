@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{burn, Burn, Mint, Token, TokenAccount};
 
-use crate::{User, Vault, TOKEN_DECIMALS};
+use crate::{User, Vault};
 
 #[derive(Accounts)]
 pub struct ClosePosition<'info> {
@@ -105,7 +105,7 @@ pub fn close_position(ctx: Context<ClosePosition>) -> Result<()> {
 
     user.deposit_value = 0;
 
-    msg!(">>> here : vault_info: {:?}", vault_info);
-    msg!(">>> here : user: {:?}", user);
+    msg!(">>> here : vault_info : {}", vault_info.key().to_string());
+    msg!(">>> here : user : {}", user.key().to_string());
     Ok(())
 }

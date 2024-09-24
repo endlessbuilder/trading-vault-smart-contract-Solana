@@ -106,9 +106,9 @@ pub fn deposit(ctx: Context<Deposit>, params: DepositParams) -> Result<()> {
 
     // recalculate bond price according to strategy
     let profit = vault_info.tvl - vault_info.deposit_value;
-    vault_info.bond_price = (vault_info.deposit_value + profit * 80 / 100) / vault_info.bond_supply;
+    vault_info.bond_price = (vault_info.deposit_value + profit * 80 / 100) / vault_info.bond_supply * 1_000_000;
 
-    msg!(">>> here : vault_info: {:?}", vault_info);
-    msg!(">>> here : user: {:?}", user);
+    msg!(">>> here : vault_info : {}", vault_info.key().to_string());
+    msg!(">>> here : user : {}", user.key().to_string());
     Ok(())
 }

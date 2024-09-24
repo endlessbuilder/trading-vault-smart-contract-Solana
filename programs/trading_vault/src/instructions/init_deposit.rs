@@ -18,18 +18,21 @@ pub struct InitDeposit<'info> {
     pub user: Box<Account<'info, User>>,
 
     #[account(
-        seeds = [b"vault_info", leader.key().as_ref()],
+        mut,
+        seeds = [b"vault_info", vault_info.leader.key().as_ref()],
         bump = vault_info.bump,
     )]
     pub vault_info: Box<Account<'info, Vault>>,
     /// CHECK:
     #[account(
+        mut,
         seeds = [b"vault_authority"],
         bump = vault_info.vault_authority_bump,
         )]
     pub vault_authority: AccountInfo<'info>,
     /// CHECK:
     #[account(
+        mut,
         seeds = [b"vault", vault_info.key().as_ref()],
         bump = vault_info.vault_bump
         )]
@@ -89,7 +92,6 @@ pub fn init_deposit(ctx: Context<InitDeposit>, params: InitDepositParams) -> Res
     vault_info.strategy_id = params.strategy_id;
     vault_info.deposit_value = params.initial_deposit;
     vault_info.tvl = params.initial_deposit;
-    vault_info.leader = leader.key();
     msg!(">>> here : set params");
 
     vault_info.transfer_tokens_from_user(
@@ -128,9 +130,15 @@ pub fn init_deposit(ctx: Context<InitDeposit>, params: InitDepositParams) -> Res
     vault_info.bond_supply = bond_amount;
     user.deposit_time = Clock::get()?.unix_timestamp;
 
-    vault_info.bond_price = vault_info.tvl / vault_info.bond_supply;
+    vault_info.bond_price = vault_info.tvl / vault_info.bond_supply * 1_000_000;
 
-    msg!(">>> here : vault_info : {:?}", vault_info);
-    msg!(">>> here : user : {:?}", user);
+    msg!(
+        ">>> here : vault_info : address {}, price {}, tvl {}, supply {}",
+        vault_info.key().to_string(),
+        vault_info.bond_price,
+        vault_info.tvl,
+        vault_info.bond_supply
+    );
+    msg!(">>> here : user : {}", user.key().to_string());
     Ok(())
 }
