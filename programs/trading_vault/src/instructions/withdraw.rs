@@ -55,19 +55,21 @@ pub struct WithdrawParams {
 pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
     let vault_info = &mut ctx.accounts.vault_info;
     let user = &mut ctx.accounts.user;
-    let current_time = Clock::get()?.unix_timestamp;
+
+    // let current_time = Clock::get()?.unix_timestamp;
+
+    // require!(
+    //     current_time > user.deposit_time + 5 * 86400,
+    //     VaultError::LockPeriodNotOver
+    // );
 
     require!(
-        current_time < user.deposit_time + 5 * 86400,
-        VaultError::LockPeriodNotOver
-    );
-
-    require!(
-        params.amount > user.deposit_value,
+        params.amount < user.deposit_value,
         VaultError::InsufficientFunds
     );
 
     // transfer usdc from vault to user
+    msg!(">>> transfer usdc from vault to user");
     vault_info.transfer_tokens(
         ctx.accounts.vault_pay_token_account.to_account_info(),
         ctx.accounts.depositor_pay_token_account.to_account_info(),
@@ -80,6 +82,7 @@ pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
 
     if ctx.accounts.depositor.key() == vault_info.leader {
         //  transfer performance fee
+        msg!(">>> transfer performance fee to leader");
         let performance_fee = ( vault_info.tvl - vault_info.deposit_value ) / 10;
         vault_info.transfer_tokens(
             ctx.accounts.vault_pay_token_account.to_account_info(),
@@ -104,6 +107,7 @@ pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
     vault_info.bond_supply -=  bond_value;
 
     // burn user's withdrawal bond amount
+    msg!(">>> burn user's withdrawal bond amount");
     // PDA signer seeds
     let signer_seeds: &[&[&[u8]]] = &[&[b"vault_authority", &[vault_info.vault_authority_bump]]];
     
