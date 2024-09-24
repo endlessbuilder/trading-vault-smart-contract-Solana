@@ -2,7 +2,9 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::Transfer;
 
 #[account]
+#[derive(Debug)]
 pub struct Vault {
+    pub address: Pubkey,
     pub strategy_id: String,
     pub bond_price: u64,
     pub bond_supply: u64,
@@ -33,7 +35,7 @@ impl Vault {
         amount: u64,
     ) -> Result<()> {
         let authority_seeds: &[&[&[u8]]] =
-            &[&[b"vault_authority", &[self.vault_authority_bump]]];
+            &[&[b"vault", self.address.as_ref(), &[self.vault_bump]]];
 
         let context = CpiContext::new(
             token_program,

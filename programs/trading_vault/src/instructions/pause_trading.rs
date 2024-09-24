@@ -6,11 +6,16 @@ use crate::Vault;
 pub struct PauseTrading<'info> {
     #[account(
         mut,
+        constraint = vault_info.backend_wallet == backend_wallet.key()
+    )]
+    pub backend_wallet: Signer<'info>,
+    #[account(
+        mut,
         seeds = [b"vault", vault_info.leader.key().as_ref()],
         bump = vault_info.bump,
     )]
     pub vault_info: Account<'info, Vault>,
-    pub leader: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 // Pauses trading in the vault

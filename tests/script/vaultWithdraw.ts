@@ -15,6 +15,7 @@ const main = async () => {
 
     let vaultInfo = testConfig.vaultInfo;
     let vaultAuthority = testConfig.vaultAuthority;
+    let vault = testConfig.vault;
     let depositor = testConfig.user;
     let user = PublicKey.findProgramAddressSync(
       [Buffer.from("user"), depositor.publicKey.toBuffer()],
@@ -32,6 +33,7 @@ const main = async () => {
 
     console.log(`>>>            vaultInfo : ${vaultInfo.toBase58()}`);
     console.log(`>>>       vaultAuthority : ${vaultAuthority.toBase58()}`);
+    console.log(`>>>                vault : ${vault.toBase58()}`);
     console.log(`>>>            depositor : ${depositor.publicKey.toBase58()}`);
     console.log(`>>>                 user : ${user.toBase58()}`);
     console.log(`>>>          mintAccount : ${mintAccount.toBase58()}`);
@@ -46,9 +48,10 @@ const main = async () => {
     );
 
     let accounts = {
+      depositor: depositor.publicKey,
       vaultInfo: vaultInfo,
       vaultAuthority: vaultAuthority,
-      depositor: depositor.publicKey,
+      vault: vault,
       user: user,
       mintAccount: mintAccount,
       depositorPayTokenAccount: depositorPayTokenAccount,

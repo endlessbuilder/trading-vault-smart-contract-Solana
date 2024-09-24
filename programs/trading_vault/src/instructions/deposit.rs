@@ -8,20 +8,21 @@ use crate::{User, Vault, TOKEN_DECIMALS};
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
+    #[account(mut)]
+    pub depositor: Signer<'info>,
     #[account(
         mut,
         seeds = [b"vault_info", vault_info.leader.key().as_ref()],
-        bump,
+        bump = vault_info.bump,
     )]
     pub vault_info: Account<'info, Vault>,
     /// CHECK:
     #[account(
+        mut,
         seeds = [b"vault_authority"],
         bump = vault_info.vault_authority_bump,
         )]
     pub vault_authority: AccountInfo<'info>,
-    #[account(mut)]
-    pub depositor: Signer<'info>,
     #[account(
         init_if_needed,
         seeds = [b"user", depositor.key().as_ref()],
@@ -98,6 +99,7 @@ pub fn deposit(ctx: Context<Deposit>, params: DepositParams) -> Result<()> {
     vault_info.deposit_value += params.amount;
     vault_info.bond_supply += bond_amount;
 
+    user.user = ctx.accounts.depositor.key();
     user.deposit_value += params.amount;
     user.bond_amount += bond_amount;
     user.deposit_time = Clock::get()?.unix_timestamp;
@@ -106,5 +108,7 @@ pub fn deposit(ctx: Context<Deposit>, params: DepositParams) -> Result<()> {
     let profit = vault_info.tvl - vault_info.deposit_value;
     vault_info.bond_price = (vault_info.deposit_value + profit * 80 / 100) / vault_info.bond_supply;
 
+    msg!(">>> here : vault_info: {:?}", vault_info);
+    msg!(">>> here : user: {:?}", user);
     Ok(())
 }

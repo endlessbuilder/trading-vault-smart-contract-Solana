@@ -5,10 +5,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-trading_vault = "HkoEezbyP1ShU3yC47xQ7hyX3mt3mqMYBjjxRCWAvRDM"
+trading_vault = "FViAQrdsZ2RuEi3pWKMjecLvr232p4EbTPH9GeEEBPNm"
 
 [programs.devnet]
-trading_vault = "HkoEezbyP1ShU3yC47xQ7hyX3mt3mqMYBjjxRCWAvRDM"
+trading_vault = "FViAQrdsZ2RuEi3pWKMjecLvr232p4EbTPH9GeEEBPNm"
 
 [registry]
 url = "https://api.apr.dev"
