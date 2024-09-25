@@ -73,51 +73,26 @@ pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
         VaultError::InsufficientFunds
     );
 
-    // transfer usdc from vault to user
-    msg!(">>> transfer usdc from vault to user");
-    vault_info.transfer_tokens(
-        ctx.accounts.vault_pay_token_account.to_account_info(),
-        ctx.accounts.depositor_pay_token_account.to_account_info(),
-        ctx.accounts.vault.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        params.amount,
-    )?;
-
+    let mut withdraw_amount = params.amount;
     let mut bond_value =
         (params.amount / vault_info.bond_price) as u64 * 10u64.pow(TOKEN_DECIMALS as u32);
 
     if ctx.accounts.depositor.key() == vault_info.leader {
         //  transfer performance fee
         msg!(">>> transfer performance fee to leader");
-        if (vault_info.tvl - vault_info.deposit_value) > 0 {
-            let performance_fee = (vault_info.tvl - vault_info.deposit_value) / 10;
-            vault_info.transfer_tokens(
-                ctx.accounts.vault_pay_token_account.to_account_info(),
-                ctx.accounts.depositor_pay_token_account.to_account_info(),
-                ctx.accounts.vault.to_account_info(),
-                ctx.accounts.token_program.to_account_info(),
-                performance_fee,
-            )?;
-
-            vault_info.tvl -= performance_fee;
+        let performance_fee = (vault_info.tvl - vault_info.deposit_value) / 10;
+        if performance_fee > 0 {
+            withdraw_amount += performance_fee;
             bond_value +=
                 (performance_fee / vault_info.bond_price) as u64 * 10u64.pow(TOKEN_DECIMALS as u32);
         }
     }
 
-    user.bond_amount -= bond_value;
-    user.deposit_value -= params.amount;
-
-    // Update vault info
-    vault_info.tvl -= params.amount;
-    vault_info.deposit_value -= params.amount;
-    vault_info.bond_supply -= bond_value;
-
     // burn user's withdrawal bond amount
     msg!(">>> burn user's withdrawal bond amount");
     // PDA signer seeds
     // let signer_seeds: &[&[&[u8]]] = &[&[b"vault_authority", &[vault_info.vault_authority_bump]]];
-
+    
     let cpi_accounts = Burn {
         mint: ctx.accounts.mint_account.to_account_info(),
         from: ctx.accounts.depositor_token_account.to_account_info(),
@@ -128,6 +103,24 @@ pub fn withdraw(ctx: Context<Withdraw>, params: WithdrawParams) -> Result<()> {
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
     burn(cpi_ctx, bond_value)?;
+
+    // transfer usdc from vault to user
+    msg!(">>> transfer usdc from vault to user");
+    vault_info.transfer_tokens(
+        ctx.accounts.vault_pay_token_account.to_account_info(),
+        ctx.accounts.depositor_pay_token_account.to_account_info(),
+        ctx.accounts.vault.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
+        withdraw_amount,
+    )?;
+
+    user.bond_amount -= bond_value;
+    user.deposit_value -= params.amount;
+
+    // Update vault info
+    vault_info.tvl -= withdraw_amount;
+    vault_info.deposit_value -= params.amount;
+    vault_info.bond_supply -= bond_value;
 
     // recalculate bond price
     let profit = vault_info.tvl - vault_info.deposit_value;
