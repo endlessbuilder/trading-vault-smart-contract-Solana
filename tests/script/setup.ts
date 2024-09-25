@@ -18,7 +18,7 @@ anchor.setProvider(provider);
 let wallet = provider.wallet as anchor.Wallet;
 export const program = anchor.workspace.TradingVault as Program<TradingVault>;
 export const connection = new Connection(
-  "https://api.testnet.solana.com",
+  "https://api.devnet.solana.com",
   "finalized"
 );
 

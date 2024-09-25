@@ -28,7 +28,7 @@ pub struct ClosePosition<'info> {
     pub vault: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
-    pub depositor: AccountInfo<'info>,
+    pub depositor: Signer<'info>,
     #[account(
         mut,
         close = vault,
@@ -47,7 +47,10 @@ pub struct ClosePosition<'info> {
         bump
     )]
     pub mint_account: Account<'info, Mint>,
-    #[account(mut)]
+    #[account(
+        mut,
+        close = depositor,
+    )]
     pub depositor_token_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -59,39 +62,38 @@ pub fn close_position(ctx: Context<ClosePosition>) -> Result<()> {
     let vault_info = &mut ctx.accounts.vault_info;
     let user = &mut ctx.accounts.user;
 
-    
-    let bond_amount = ctx.accounts.depositor_token_account.get_lamports();
-    
+    let bond_amount = user.bond_amount;
+
     // if ctx.accounts.depositor.key() == vault_info.leader {
-        //     //  transfer performance fee
-        //     let performance_fee = (vault_info.tvl - vault_info.deposit_value) / 10;
-        //     vault_info.transfer_tokens(
-            //         ctx.accounts.vault_pay_token_account.to_account_info(),
-            //         ctx.accounts.depositor_pay_token_account.to_account_info(),
-            //         ctx.accounts.vault.to_account_info(),
-            //         ctx.accounts.token_program.to_account_info(),
-            //         performance_fee,
-            //     )?;
-            
-            //     vault_info.tvl -= performance_fee;
-            //     bond_amount +=
-            //         (performance_fee / vault_info.bond_price) as u64 * 10u64.pow(TOKEN_DECIMALS as u32);
-            // }
-            
-            // burn user's withdrawal bond amount
+    //     //  transfer performance fee
+    //     let performance_fee = (vault_info.tvl - vault_info.deposit_value) / 10;
+    //     vault_info.transfer_tokens(
+    //         ctx.accounts.vault_pay_token_account.to_account_info(),
+    //         ctx.accounts.depositor_pay_token_account.to_account_info(),
+    //         ctx.accounts.vault.to_account_info(),
+    //         ctx.accounts.token_program.to_account_info(),
+    //         performance_fee,
+    //     )?;
+
+    //     vault_info.tvl -= performance_fee;
+    //     bond_amount +=
+    //         (performance_fee / vault_info.bond_price) as u64 * 10u64.pow(TOKEN_DECIMALS as u32);
+    // }
+
+    // burn user's withdrawal bond amount
     // PDA signer seeds
     // let signer_seeds: &[&[&[u8]]] = &[&[b"vault_authority", &[vault_info.vault_authority_bump]]];
-    
+
     let cpi_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info().clone(),
         Burn {
             mint: ctx.accounts.mint_account.to_account_info(),
             from: ctx.accounts.depositor_token_account.to_account_info(),
             authority: ctx.accounts.depositor.to_account_info(),
-        }
+        },
     );
     burn(cpi_ctx, bond_amount)?;
-    
+
     // transfer user's deposit from vault to user after burn
     vault_info.transfer_tokens(
         ctx.accounts.vault_pay_token_account.to_account_info(),
@@ -101,9 +103,21 @@ pub fn close_position(ctx: Context<ClosePosition>) -> Result<()> {
         user.deposit_value,
     )?;
 
-    vault_info.deposit_value -= user.deposit_value;
-    vault_info.tvl -= user.deposit_value;
-    vault_info.bond_supply -= bond_amount;
+    if vault_info.deposit_value > user.deposit_value {
+        vault_info.deposit_value -= user.deposit_value;
+    } else {
+        vault_info.deposit_value = 0;
+    }
+    if vault_info.tvl > user.deposit_value {
+        vault_info.tvl -= user.deposit_value;
+    } else {
+        vault_info.tvl = 0;
+    }
+    if vault_info.bond_supply > bond_amount {
+        vault_info.bond_supply -= bond_amount;
+    } else {
+        vault_info.bond_supply = 0;
+    }
 
     user.deposit_value = 0;
 

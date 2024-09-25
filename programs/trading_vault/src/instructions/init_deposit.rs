@@ -133,11 +133,8 @@ pub fn init_deposit(ctx: Context<InitDeposit>, params: InitDepositParams) -> Res
     vault_info.bond_price = vault_info.tvl / vault_info.bond_supply * 1_000_000;
 
     msg!(
-        ">>> here : vault_info : address {}, price {}, tvl {}, supply {}",
+        ">>> here : vault_info : address {}",
         vault_info.key().to_string(),
-        vault_info.bond_price,
-        vault_info.tvl,
-        vault_info.bond_supply
     );
     msg!(">>> here : user : {}", user.key().to_string());
     Ok(())
