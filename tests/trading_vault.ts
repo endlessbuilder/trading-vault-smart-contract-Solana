@@ -33,7 +33,10 @@ describe("trading_vault", () => {
   anchor.setProvider(provider);
   let wallet = provider.wallet as anchor.Wallet;
   const program = anchor.workspace.TradingVault as Program<TradingVault>;
-  const connection = new Connection("https://api.devnet.solana.com", "finalized");
+  const connection = new Connection(
+    "https://rpc.ankr.com/solana_devnet/3becd2d01b34b9aaada14a2aad12f01089cebabed27ea5bf1c950c413b34430f",
+    "finalized"
+  );
 
   let payer = wallet.payer;
   // 3JKwidu2bmNhBcJs62TxHHaaFn98rdtNGcprRSd7pEMT
@@ -195,10 +198,7 @@ describe("trading_vault", () => {
       vault,
       payer
     );
-    console.log(
-      ">>> vault USDC Token Account Pubkey = ",
-      vault.toBase58()
-    );
+    console.log(">>> vault USDC Token Account Pubkey = ", vault.toBase58());
 
     // mint USDC token to leader and user
     await mintTo(

@@ -9,7 +9,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("4aeW1288H4t5oSmUhmrxmVfvuhFgYrtPSj6BGwCC4djv");
+declare_id!("FViAQrdsZ2RuEi3pWKMjecLvr232p4EbTPH9GeEEBPNm");
 
 #[program]
 pub mod trading_vault {

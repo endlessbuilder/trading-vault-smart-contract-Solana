@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import * as utils from "../utils";
 import { connection, getConfig, program } from "./setup";
 import {
@@ -8,63 +8,67 @@ import {
 } from "@solana/spl-token";
 
 const main = async () => {
-  console.log(`>>> ########### vaultInitDeposit ############`);
+  console.log(`>>> ########### vaultWithdraw ############`);
   let testConfig = await getConfig();
   try {
     let payer = testConfig.payer;
-    let leader = testConfig.leader;
-    let userPda = testConfig.userPda;
+
+    let depositor = testConfig.user;
     let vaultInfo = testConfig.vaultInfo;
     let vaultAuthority = testConfig.vaultAuthority;
     let vault = testConfig.vault;
+    let user = PublicKey.findProgramAddressSync(
+      [Buffer.from("user"), depositor.publicKey.toBuffer()],
+      program.programId
+    )[0];
     let mintAccount = testConfig.mintAccount;
+    let depositorPayTokenAccount = testConfig.userDUSDCATA;
     let vaultPayTokenAccount = testConfig.vaultPayTokenAccount;
-    let leaderPayTokenAccount = testConfig.leaderDUSDCATA;
-    let leaderTokenAccount = await utils.getOrCreateATA(
+    let depositorTokenAccount = await utils.getOrCreateATA(
       connection,
       mintAccount,
-      leader.publicKey,
+      depositor.publicKey,
       payer
     );
 
-    console.log(`>>>               leader : ${leader.publicKey.toBase58()}`);
-    console.log(`>>>                 user : ${userPda.toBase58()}`);
     console.log(`>>>            vaultInfo : ${vaultInfo.toBase58()}`);
     console.log(`>>>       vaultAuthority : ${vaultAuthority.toBase58()}`);
     console.log(`>>>                vault : ${vault.toBase58()}`);
+    console.log(`>>>            depositor : ${depositor.publicKey.toBase58()}`);
+    console.log(`>>>                 user : ${user.toBase58()}`);
     console.log(`>>>          mintAccount : ${mintAccount.toBase58()}`);
+    console.log(
+      `>> depositorPayTokenAccount : ${depositorPayTokenAccount.toBase58()}`
+    );
     console.log(
       `>>> vaultPayTokenAccount : ${vaultPayTokenAccount.toBase58()}`
     );
     console.log(
-      `>>> leaderPayTokenAccount: ${leaderPayTokenAccount.toBase58()}`
+      `>>> depositorTokenAccount: ${depositorTokenAccount.toBase58()}`
     );
-    console.log(`>>>   leaderTokenAccount : ${leaderTokenAccount.toBase58()}`);
 
     let accounts = {
-      leader: leader.publicKey,
-      user: userPda,
+      depositor: depositor.publicKey,
       vaultInfo: vaultInfo,
       vaultAuthority: vaultAuthority,
       vault: vault,
+      user: user,
       mintAccount: mintAccount,
+      depositorPayTokenAccount: depositorPayTokenAccount,
       vaultPayTokenAccount: vaultPayTokenAccount,
-      leaderPayTokenAccount: leaderPayTokenAccount,
-      leaderTokenAccount: leaderTokenAccount,
-      systemProgram: SystemProgram.programId,
+      depositorTokenAccount: depositorTokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
     };
 
     let params = {
-      strategyId: "1",
-      initialDeposit: new anchor.BN(11 * 1_000_000),
+      amount: new anchor.BN(3 * 1_000_000),
     };
 
     let txSignature = await program.methods
-      .vaultInitDeposit(params)
+      .vaultWithdraw(params)
       .accounts(accounts)
-      .signers([leader])
+      .signers([depositor])
       .rpc();
 
     let latestBlockhash = await connection.getLatestBlockhash("finalized");
@@ -74,12 +78,9 @@ const main = async () => {
       lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
     });
 
-    console.log(">>> ✅ vaultInitDeposit txId = ", txSignature);
-
-    let fetchedData = await program.account.vault.fetch(vaultInfo);
-    console.log(">>> vaultInfo ", JSON.stringify(fetchedData));
+    console.log(">>> ✅ vaultWithdraw txId = ", txSignature);
   } catch (e) {
-    console.log(">>> vaultInitDeposit error # \n ", e);
+    console.log(">>> vaultWithdraw error # \n ", e);
   }
 };
 
