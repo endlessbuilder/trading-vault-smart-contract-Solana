@@ -18,7 +18,7 @@ anchor.setProvider(provider);
 let wallet = provider.wallet as anchor.Wallet;
 export const program = anchor.workspace.TradingVault as Program<TradingVault>;
 export const connection = new Connection(
-  "https://api.testnet.solana.com",
+  "https://devnet.helius-rpc.com/?api-key=bf788362-5f53-41d2-9230-e48586e76a06",
   "finalized"
 );
 
