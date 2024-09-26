@@ -7,7 +7,7 @@ use raydium_cp_swap::{
 };
 
 #[derive(Accounts)]
-pub struct ProxySwapBaseInput<'info> {
+pub struct RaydiumSwapBaseInput<'info> {
     pub cp_swap_program: Program<'info, RaydiumCpSwap>,
     /// The user performing the swap
     pub payer: Signer<'info>,
@@ -74,7 +74,7 @@ pub struct ProxySwapBaseInput<'info> {
     pub observation_state: AccountLoader<'info, ObservationState>,
 }
 
-pub fn proxy_swap_base_input(
+pub fn raydium_swap_base_input(
     ctx: Context<ProxySwapBaseInput>,
     amount_in: u64,
     minimum_amount_out: u64,

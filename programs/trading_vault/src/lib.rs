@@ -46,4 +46,8 @@ pub mod trading_vault {
     pub fn vault_terminate_vault(ctx: Context<TerminateVault>) -> Result<()> {
         terminate_vault(ctx)
     }
+
+    pub fn vault_raydium_swap_base_in(ctx: Context<RaydiumSwapBaseInput>, amount_in: u64, minimum_amount_out: u64) -> Result<()> {
+        raydium_swap_base_in(ctx, amount_in, minimum_amount_out)
+    }
 }
