@@ -14,7 +14,7 @@ trading_vault = "FViAQrdsZ2RuEi3pWKMjecLvr232p4EbTPH9GeEEBPNm"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "https://api.testnet.solana.com"
+cluster = "https://devnet.helius-rpc.com/?api-key=bf788362-5f53-41d2-9230-e48586e76a06"
 wallet = "/home/wsl/.config/solana/id.json"
 
 [scripts]
