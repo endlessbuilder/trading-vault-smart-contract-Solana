@@ -75,7 +75,7 @@ pub struct RaydiumSwapBaseInput<'info> {
 }
 
 pub fn raydium_swap_base_input(
-    ctx: Context<ProxySwapBaseInput>,
+    ctx: Context<RaydiumSwapBaseInput>,
     amount_in: u64,
     minimum_amount_out: u64,
 ) -> Result<()> {

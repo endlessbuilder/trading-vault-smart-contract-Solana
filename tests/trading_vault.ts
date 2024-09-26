@@ -34,7 +34,7 @@ describe("trading_vault", () => {
   let wallet = provider.wallet as anchor.Wallet;
   const program = anchor.workspace.TradingVault as Program<TradingVault>;
   const connection = new Connection(
-    "https://rpc.ankr.com/solana_devnet/3becd2d01b34b9aaada14a2aad12f01089cebabed27ea5bf1c950c413b34430f",
+    "https://localhost:8899/",
     "finalized"
   );
 
